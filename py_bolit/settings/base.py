@@ -37,9 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 
-    'py-bolit.api',
-    'py-bolit.telegram',
+    'py_bolit.api',
+    'py_bolit.telegram',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'py-bolit.urls'
+ROOT_URLCONF = 'py_bolit.urls'
 
 TEMPLATES = [
     {
@@ -70,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'py-bolit.wsgi.application'
+WSGI_APPLICATION = 'py_bolit.wsgi.application'
 
 
 # Database
