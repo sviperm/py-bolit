@@ -14,3 +14,12 @@ class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = ['code', 'name', 'description', 'node_type', 'distribution']
+
+
+class NodeCodeRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=100)
+    # TODO: validate latin letters
+
+
+class NodeNameRequestSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)

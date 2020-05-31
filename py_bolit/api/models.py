@@ -22,6 +22,7 @@ class Node(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
     node_type = models.ForeignKey('NodeType', on_delete=models.SET_NULL, null=True)
+    # TODO set max number
     distribution = models.FloatField()
 
     def __str__(self):
@@ -29,7 +30,8 @@ class Node(models.Model):
 
 
 class Probability(models.Model):
-    # родитель и ребенок должны быть разными узлами
+    # TODO parent and child nodes mustn't be equals
     parent_state = models.ForeignKey('State', on_delete=models.CASCADE, related_name="parent")
     child_state = models.ForeignKey('State', on_delete=models.CASCADE, related_name="child")
+    # TODO set max number
     value = models.FloatField()
