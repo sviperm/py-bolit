@@ -7,11 +7,13 @@ class NodeTypeAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(State)
-class StateAdmin(admin.ModelAdmin):
-    pass
+class StateInline(admin.TabularInline):
+    model = State
+    extra = 0
 
 
 @admin.register(Node)
 class NodeAdmin(admin.ModelAdmin):
-    pass
+    inlines = [
+        StateInline,
+    ]

@@ -1,7 +1,7 @@
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
-from .bayes_network import get_model, convert_prediction_to_dict
+from .bayes_network import BayesNetwork
 from .models import Node, NodeType
 from .serializers import (NodeCodeRequestSerializer, NodeNameRequestSerializer,
                           NodeSerializer, NodeTypeSerializer)
@@ -13,28 +13,34 @@ class NodeTypeListViewSet(mixins.ListModelMixin,
     serializer_class = NodeTypeSerializer
 
 
-class NodeListViewSet(mixins.ListModelMixin,
-                      viewsets.GenericViewSet):
+class NodeListViewSet(viewsets.ViewSet):
     # TODO change HTML form
     queryset = Node.objects.all()
-    serializer_class = NodeSerializer
+    serializer = NodeSerializer
 
-    # TODO GET method
-
-    def create(self, request, *args, **kwargs):
-        node_type = request.data.get('type')
-        queryset = self.queryset
+    @classmethod
+    def get_response(cls, data):
+        node_type = data.get('type')
+        queryset = cls.queryset
         if type(node_type) is str:
-            queryset = queryset.filter(node_type__name=node_type)
+            queryset = queryset.filter(type__name=node_type)
         elif type(node_type) is list:
-            queryset = queryset.filter(node_type__name__in=node_type)
+            queryset = queryset.filter(type__name__in=node_type)
 
         if queryset:
-            serializer = self.get_serializer(queryset, many=True)
+            serializer = cls.serializer(queryset, many=True)
             return Response(serializer.data)
 
         # TODO explain error
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def list(self, request, *args, **kwargs):
+        data = {key: ''.join(value) for key, value in request.query_params.items()}
+        return self.get_response(data)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        return self.get_response(data)
 
 
 class NodeViewSet(viewsets.ViewSet):
@@ -72,10 +78,10 @@ class NodeViewSet(viewsets.ViewSet):
 
 
 class PredictViewSet(viewsets.ViewSet):
+    # {"курение": 1, "стресс": 1, "загрудинные боли": 1,"боли > 15 мин": 0, "старше 40": 1, "инфаркт в анамнезе": 1}
     def create(self, request, format=None):
-        data = request.data
-        model = get_model()
+        # TODO validate request.data
+        model = BayesNetwork()
         # TODO error handler
-        prediction = model.predict_proba(data)
-        result = convert_prediction_to_dict(model, data, prediction)
-        return Response(result)
+        prediction = model.predict(request.data)
+        return Response(prediction)

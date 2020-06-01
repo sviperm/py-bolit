@@ -9,11 +9,12 @@ class NodeTypeSerializer(serializers.ModelSerializer):
 
 
 class NodeSerializer(serializers.ModelSerializer):
-    node_type = serializers.StringRelatedField(many=False)
+    type = serializers.StringRelatedField(many=False)
+    states = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Node
-        fields = ['code', 'name', 'description', 'node_type', 'distribution']
+        fields = ['code', 'name', 'description', 'type', 'distribution', 'states']
 
 
 class NodeCodeRequestSerializer(serializers.Serializer):

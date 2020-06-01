@@ -9,19 +9,19 @@ class NodeType(models.Model):
 
 
 class State(models.Model):
-    node = models.ForeignKey('NodeType', on_delete=models.CASCADE)
+    node = models.ForeignKey('Node', on_delete=models.CASCADE, related_name='states')
     value = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.node.code} {self.value}"
+        return f"{self.value}"
 
 
 class Node(models.Model):
-    # добавить ограничение на латинские буквы в код
+    # TODO only latin constraint
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
-    node_type = models.ForeignKey('NodeType', on_delete=models.SET_NULL, null=True)
+    type = models.ForeignKey('NodeType', on_delete=models.SET_NULL, null=True)
     # TODO set max number
     distribution = models.FloatField()
 

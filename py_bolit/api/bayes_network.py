@@ -1,10 +1,9 @@
-import numpy as np
-from itertools import product
 from copy import deepcopy
-from pomegranate import (BayesianNetwork, DiscreteDistribution,
-                         ConditionalProbabilityTable, State)
+from itertools import product
 
-# TODO: convert to class
+import numpy as np
+from pomegranate import (BayesianNetwork, ConditionalProbabilityTable,
+                         DiscreteDistribution, State)
 
 
 def generate_CPT(event, dependencies):
@@ -37,17 +36,6 @@ def generate_CPT(event, dependencies):
         row[-1] = row[-1] / sums[int(i / states)]
         row[-1] = round(row[-1], 3)
     return table
-
-
-def convert_prediction_to_dict(model, data, prediction):
-    result = {}
-    for i, state in enumerate(model.states):
-        name = state.name.lower()
-        if name in [key.lower() for key in data]:
-            continue
-        pred = prediction[i].parameters[0]
-        result[name] = pred
-    return result
 
 
 e_smoking = {
@@ -215,41 +203,58 @@ n_pain_mt_15min = State(pain_mt_15min, name='боли > 15 мин')
 n_dyspnea = State(dyspnea, name='одышка')
 
 
-def get_model():
-    model = BayesianNetwork('Этиологически-ориентированная СППВР')
-    model.add_states(n_smoking, n_imt, n_age_mt_40, n_ater, n_stress,
-                     n_prev_ha, n_ha, n_sten, n_nevralgia, n_chest_pain,
-                     n_pain_mt_15min, n_dyspnea)
+class BayesNetwork:
+    def __init__(self):
+        # TODO upload and download destribution from databse
 
-    model.add_edge(n_smoking, n_ater)
+        model = BayesianNetwork('Этиологически-ориентированная СППВР')
+        model.add_states(n_smoking, n_imt, n_age_mt_40, n_ater, n_stress,
+                         n_prev_ha, n_ha, n_sten, n_nevralgia, n_chest_pain,
+                         n_pain_mt_15min, n_dyspnea)
 
-    model.add_edge(n_imt, n_ater)
-    model.add_edge(n_imt, n_nevralgia)
+        model.add_edge(n_smoking, n_ater)
 
-    model.add_edge(n_ater, n_sten)
-    model.add_edge(n_ater, n_ha)
+        model.add_edge(n_imt, n_ater)
+        model.add_edge(n_imt, n_nevralgia)
 
-    model.add_edge(n_age_mt_40, n_ater)
-    model.add_edge(n_age_mt_40, n_nevralgia)
-    model.add_edge(n_age_mt_40, n_sten)
-    model.add_edge(n_age_mt_40, n_ha)
+        model.add_edge(n_ater, n_sten)
+        model.add_edge(n_ater, n_ha)
 
-    model.add_edge(n_stress, n_ha)
-    model.add_edge(n_stress, n_sten)
+        model.add_edge(n_age_mt_40, n_ater)
+        model.add_edge(n_age_mt_40, n_nevralgia)
+        model.add_edge(n_age_mt_40, n_sten)
+        model.add_edge(n_age_mt_40, n_ha)
 
-    model.add_edge(n_prev_ha, n_ha)
+        model.add_edge(n_stress, n_ha)
+        model.add_edge(n_stress, n_sten)
 
-    model.add_edge(n_nevralgia, n_chest_pain)
-    model.add_edge(n_nevralgia, n_pain_mt_15min)
+        model.add_edge(n_prev_ha, n_ha)
 
-    model.add_edge(n_sten, n_chest_pain)
-    model.add_edge(n_sten, n_pain_mt_15min)
-    model.add_edge(n_sten, n_dyspnea)
+        model.add_edge(n_nevralgia, n_chest_pain)
+        model.add_edge(n_nevralgia, n_pain_mt_15min)
 
-    model.add_edge(n_ha, n_chest_pain)
-    model.add_edge(n_ha, n_pain_mt_15min)
-    model.add_edge(n_ha, n_dyspnea)
+        model.add_edge(n_sten, n_chest_pain)
+        model.add_edge(n_sten, n_pain_mt_15min)
+        model.add_edge(n_sten, n_dyspnea)
 
-    model.bake()
+        model.add_edge(n_ha, n_chest_pain)
+        model.add_edge(n_ha, n_pain_mt_15min)
+        model.add_edge(n_ha, n_dyspnea)
 
-    return model
+        model.bake()
+
+        self.model = model
+
+    def predict(self, X):
+        prediction = self.model.predict_proba(X)
+        result = {}
+        for i, state in enumerate(self.model.states):
+            name = state.name.lower()
+            if name in [key.lower() for key in X]:
+                continue
+            pred = prediction[i].parameters[0]
+            result[name] = {
+                'states': pred,
+                'type': 'test' + str(i),
+            }
+        return result
