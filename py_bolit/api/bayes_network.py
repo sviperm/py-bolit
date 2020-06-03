@@ -11,7 +11,7 @@ def generate_CPT(event, dependencies):
 
     for dep in deps:
         if len(dep) < 2:
-            dep[0] = [pr for st, pr in event.items()]
+            dep['нет'] = [pr for st, pr in event.items()]
 
     e_states = list(event.keys())
     d_states = [list(dep.keys()) for dep in deps]
@@ -39,91 +39,91 @@ def generate_CPT(event, dependencies):
 
 
 e_smoking = {
-    1: 0.5,
-    0: 0.5,
+    "да": 0.5,
+    "нет": 0.5,
 }
 
 e_ater = {
-    1: 0.1,
-    0: 0.9,
+    "да": 0.1,
+    "нет": 0.9,
 }
 
 e_imt = {
-    1: 0.3,
-    0: 0.7,
+    "да": 0.3,
+    "нет": 0.7,
 }
 
 e_age_mt_40 = {
-    1: 0.5,
-    0: 0.5,
+    "да": 0.5,
+    "нет": 0.5,
 }
 
 e_stress = {
-    1: 0.2,
-    0: 0.8,
+    "да": 0.2,
+    "нет": 0.8,
 }
 
 e_prev_ha = {
-    1: 0.01,
-    0: 0.99,
+    "да": 0.01,
+    "нет": 0.99,
 }
 
 e_ha = {
-    1: 0.01,
-    0: 0.99,
+    "да": 0.01,
+    "нет": 0.99,
 }
 
 e_sten = {
-    1: 0.01,
-    0: 0.99,
+    "да": 0.01,
+    "нет": 0.99,
 }
 
 e_nevralgia = {
-    1: 0.05,
-    0: 0.95,
+    "да": 0.05,
+    "нет": 0.95,
 }
 
 e_chest_pain = {
-    1: 0.01,
-    0: 0.99,
+    "да": 0.01,
+    "нет": 0.99,
 }
 
 e_pain_mt_15min = {
-    1: 0.01,
-    0: 0.99,
+    "да": 0.01,
+    "нет": 0.99,
 }
 
 e_dyspnea = {
-    1: 0.01,
-    0: 0.99,
+    "да": 0.01,
+    "нет": 0.99,
 }
 
-d_smoke_ater = {1: [0.9, 0.1]}
-d_imt_ater = {1: [0.8, 0.2]}
-d_age_mt_40_ater = {1: [0.7, 0.3]}
+d_smoke_ater = {"да": [0.9, 0.1]}
+d_imt_ater = {"да": [0.8, 0.2]}
+d_age_mt_40_ater = {"да": [0.7, 0.3]}
 
-d_prev_ha_ha = {1: [0.5, 0.5]}
-d_stress_ha = {1: [0.8, 0.2]}
-d_ater_ha = {1: [0.99, 0.01]}
-d_age_mt_40_ha = {1: [0.85, 0.15]}
+d_prev_ha_ha = {"да": [0.5, 0.5]}
+d_stress_ha = {"да": [0.8, 0.2]}
+d_ater_ha = {"да": [0.99, 0.01]}
+d_age_mt_40_ha = {"да": [0.85, 0.15]}
 
-d_stress_sten = {1: [0.8, 0.2]}
-d_ater_sten = {1: [0.99, 0.01]}
-d_age_mt_40_sten = {1: [0.65, 0.35]}
+d_stress_sten = {"да": [0.8, 0.2]}
+d_ater_sten = {"да": [0.99, 0.01]}
+d_age_mt_40_sten = {"да": [0.65, 0.35]}
 
-d_imt_nevralgia = {1: [0.05, 0.95], 0: [0.9, 0.1]}
-d_age_mt_40_nevralgia = {1: [0.1, 0.9], 0: [0.9, 0.1]}
+d_imt_nevralgia = {"да": [0.05, 0.95], "нет": [0.9, 0.1]}
+d_age_mt_40_nevralgia = {"да": [0.1, 0.9], "нет": [0.9, 0.1]}
 
-d_nevralgia_chest_pain = {1: [0.99, 0.01]}
-d_sten_chest_pain = {1: [0.99, 0.01]}
-d_ha_chest_pain = {1: [0.99, 0.01]}
+d_nevralgia_chest_pain = {"да": [0.99, 0.01]}
+d_sten_chest_pain = {"да": [0.99, 0.01]}
+d_ha_chest_pain = {"да": [0.99, 0.01]}
 
-d_nevralgia_pain_mt_15min = {1: [0.01, 0.99]}
-d_sten_pain_mt_15min = {1: [0.01, 0.99]}
-d_ha_pain_mt_15min = {1: [0.99, 0.01]}
+d_nevralgia_pain_mt_15min = {"да": [0.01, 0.99]}
+d_sten_pain_mt_15min = {"да": [0.01, 0.99]}
+d_ha_pain_mt_15min = {"да": [0.99, 0.01]}
 
-d_sten_dyspnea = {1: [0.99, 0.01]}
-d_ha_dyspnea = {1: [0.01, 0.99]}
+d_sten_dyspnea = {"да": [0.99, 0.01]}
+d_ha_dyspnea = {"да": [0.01, 0.99]}
 
 # Курение
 smoking = DiscreteDistribution(e_smoking)
@@ -189,18 +189,18 @@ dyspnea = ConditionalProbabilityTable(
     [sten, ha]
 )
 
-n_smoking = State(smoking, name='курение')
-n_imt = State(imt, name='имт')
-n_age_mt_40 = State(age_mt_40, name='старше 40')
-n_ater = State(ater, name='атеросклероз')
-n_stress = State(stress, name='стресс')
-n_prev_ha = State(prev_ha, name='инфаркт в анамнезе')
-n_ha = State(ha, name='инфаркт')
-n_sten = State(sten, name='стенокардия')
-n_nevralgia = State(nevralgia, name='невралгия')
-n_chest_pain = State(chest_pain, name='загрудинные боли')
-n_pain_mt_15min = State(pain_mt_15min, name='боли > 15 мин')
-n_dyspnea = State(dyspnea, name='одышка')
+n_smoking = State(smoking, name='smoking')
+n_imt = State(imt, name='imt')
+n_age_mt_40 = State(age_mt_40, name='age_mt_40')
+n_ater = State(ater, name='ater')
+n_stress = State(stress, name='stress')
+n_prev_ha = State(prev_ha, name='prev_ha')
+n_ha = State(ha, name='ha')
+n_sten = State(sten, name='sten')
+n_nevralgia = State(nevralgia, name='nevralgia')
+n_chest_pain = State(chest_pain, name='chest_pain')
+n_pain_mt_15min = State(pain_mt_15min, name='pain_mt_15min')
+n_dyspnea = State(dyspnea, name='dyspnea')
 
 
 class BayesNetwork:
@@ -257,4 +257,15 @@ class BayesNetwork:
                 'states': pred,
                 'type': 'test' + str(i),
             }
+            # TODO create this answer
+            # [
+            #     {
+            #         "code": "stress",
+            #         "name": "стресс",
+            #         "type": "symptom",
+            #         "states": {
+            #             "да": 0.24735571972072926,
+            #             "нет": 0.7526442802792708,
+            #         },
+            # ]
         return result

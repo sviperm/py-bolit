@@ -2,6 +2,7 @@ import json
 import requests
 from re import match
 from pprint import pprint
+from py_bolit.settings.telegram import TG_API_URL
 
 
 def debug_response(fun):
@@ -28,9 +29,7 @@ def is_command(message):
 
 
 class TelegramBot:
-    # DEV
-    # TODO: move to settings (split dev and prod)
-    __URL = "https://vast-refuge-73990.herokuapp.com/https://api.telegram.org/bot"
+    __URL = TG_API_URL
 
     def __init__(self, TOKEN):
         self._TOKEN = TOKEN
@@ -114,22 +113,28 @@ class TelegramBot:
 
     # DECORATORS
     @staticmethod
-    def message_handler(request, commands=None, command_regexp=None):
+    def message_handler(request,
+                        commands=None,
+                        command_regexp=None,
+                        ignore_commands=False):
         def wrapper(func):
             message = request_to_dict(request).get('message')
             if message:
                 text = message.get('text')
-                if (commands or command_regexp) and is_command(message):
-                    if commands:
-                        cmd = match(r"^\/(\d+|\w+)$", text)
-                        if cmd:
-                            cmds = [cmd.group(0), cmd.group(1)]
-                            is_intersacted = bool([x for x in cmds if x in commands])
-                            if is_intersacted:
-                                return func(message)
-                    elif command_regexp and match(command_regexp, text):
-                        return func(message)
-                else:
+                if commands or command_regexp:
+                    if is_command(message):
+                        if commands:
+                            cmd = match(r"^\/(\d+|\w+)$", text)
+                            if cmd:
+                                cmds = [cmd.group(0), cmd.group(1)]
+                                is_intersacted = bool([x for x in cmds if x in commands])
+                                if is_intersacted:
+                                    return func(message)
+                        elif command_regexp and match(command_regexp, text):
+                            return func(message)
+                elif ignore_commands and not match(r"^\/", text):
+                    return func(message)
+                elif not ignore_commands:
                     return func(message)
         return wrapper
 
@@ -167,7 +172,7 @@ class TelegramBot:
                             message_id=message['message_id'],
                             reply_markup=InlineKeyboardMarkup().to_json()
                         )
-                    return func(id, user, message)
+                    return func(id, user, message, data)
                 elif (callbacks and data in callbacks) or (callback_regexp and match(callback_regexp, data)):
                     if remove:
                         self.edit_message_reply_markup(
@@ -175,7 +180,7 @@ class TelegramBot:
                             message_id=message['message_id'],
                             reply_markup=InlineKeyboardMarkup().to_json()
                         )
-                    return func(id, user, message)
+                    return func(id, user, message, data)
         return wrapper
 
 

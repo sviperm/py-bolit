@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import NodeType, State, Node
+from .models import NodeType, State, Node, Probability
 
 
 @admin.register(NodeType)
@@ -17,3 +17,8 @@ class NodeAdmin(admin.ModelAdmin):
     inlines = [
         StateInline,
     ]
+
+
+@admin.register(Probability)
+class ProbabilityAdmin(admin.ModelAdmin):
+    pass

@@ -1,8 +1,9 @@
 from . import InlineKeyboardMarkup, InlineKeyboardButton
 
-empty_keyboard = InlineKeyboardMarkup([]).to_json()
 
-yes_no_keyboard = InlineKeyboardMarkup([[
-    InlineKeyboardButton('Да', callback_data='yes'),
-    InlineKeyboardButton('Нет', callback_data='no'),
-]]).to_json()
+def get_node_keyboard(node):
+    buttons = [[
+        InlineKeyboardButton(s, callback_data=f"{node['code']}${s}")
+        for s in node['states']
+    ]]
+    return InlineKeyboardMarkup(buttons).to_json()

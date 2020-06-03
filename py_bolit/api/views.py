@@ -78,7 +78,6 @@ class NodeViewSet(viewsets.ViewSet):
 
 
 class PredictViewSet(viewsets.ViewSet):
-    # {"курение": 1, "стресс": 1, "загрудинные боли": 1,"боли > 15 мин": 0, "старше 40": 1, "инфаркт в анамнезе": 1}
     def create(self, request, format=None):
         # TODO validate request.data
         model = BayesNetwork()
