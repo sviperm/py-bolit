@@ -247,25 +247,16 @@ class BayesNetwork:
 
     def predict(self, X):
         prediction = self.model.predict_proba(X)
-        result = {}
+        result = []
         for i, state in enumerate(self.model.states):
-            name = state.name.lower()
-            if name in [key.lower() for key in X]:
+            code = state.name.lower()
+            if code in [key.lower() for key in X]:
                 continue
             pred = prediction[i].parameters[0]
-            result[name] = {
+            result.append({
+                'code': code,
+                'name': 'TODO',
+                'type': 'TODO',
                 'states': pred,
-                'type': 'test' + str(i),
-            }
-            # TODO create this answer
-            # [
-            #     {
-            #         "code": "stress",
-            #         "name": "стресс",
-            #         "type": "symptom",
-            #         "states": {
-            #             "да": 0.24735571972072926,
-            #             "нет": 0.7526442802792708,
-            #         },
-            # ]
+            })
         return result

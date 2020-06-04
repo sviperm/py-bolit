@@ -8,12 +8,12 @@ from py_bolit.settings.telegram import BOT_TOKEN, BOT_WEBHOOK
 
 from . import templates
 from .bot import TelegramBot
-from .bot.keyboards import get_node_keyboard
+from .bot.keyboards import get_node_keyboard, get_reply_keyboard
 from .models import Chat, Node
 
 bot = TelegramBot(BOT_TOKEN)
-bot.delete_webhook()
-bot.init_webhook(BOT_WEBHOOK)
+# bot.delete_webhook()
+# bot.init_webhook(BOT_WEBHOOK)
 
 MDSS_API = "http://0.0.0.0:8000/api"
 DEFAULT_RESPONSE = JsonResponse({"ok": "POST request processed"})
@@ -35,8 +35,11 @@ class BotView(View):
             def start_command(message):
                 print('start')
                 Node.objects.filter(chat=chat).delete()
-                bot.send_message(chat.id, templates.start_message)
-                # TODO keyboard
+                nodes = json.loads(requests.get(f"{MDSS_API}/get_nodes/").content)
+                names = [n['name'] for n in nodes if n['type'] != 'diagnosis']
+                bot.send_message(chat.id,
+                                 templates.start_message,
+                                 reply_markup=get_reply_keyboard(names))
 
             @bot.message_handler(request, commands=['result'])
             def result_command(message):
@@ -53,16 +56,16 @@ class BotView(View):
                 # TODO: Ask more
                 bot.send_message(chat.id, text)
 
-            # TODO force result
+            @bot.message_handler(request, commands=['force_result'])
+            def force_result_command(message):
+                # TODO force result
+                pass
 
             @bot.message_handler(request, ignore_commands=True)
             def ask_node(message, *args, **kwargs):
                 text = message['text']
                 resp = requests.post(f"{MDSS_API}/get_node/",
-                                     data={"code": text})
-                if not resp:
-                    resp = requests.post(f"{MDSS_API}/get_node/",
-                                         data={"name": text})
+                                     data={"name": text})
                 if resp:
                     resp = json.loads(resp.content)
                     bot.send_message(
@@ -73,12 +76,12 @@ class BotView(View):
                     bot.send_message(message['chat']['id'],
                                      templates.node_not_found)
 
-            @bot.callback_query_handler(request,
-                                        callback_regexp=r"\w+\$[А-яёЁ]+")
+            @bot.callback_query_handler(request, callback_regexp=r"\w+\$[А-яёЁ]+")
             def save_node(callback_id, user, message, data, *args, **kwargs):
-                bot.answer_callback_query(callback_id)
                 chat = Chat.objects.get(id=message['chat']['id'])
                 code, state = data.split('$')
+                bot.answer_callback_query(callback_id,
+                                          text=f"{message['text']}: {state}")
                 node, _ = Node.objects.update_or_create(
                     chat=chat, code=code,
                     defaults={'state': state},

@@ -184,8 +184,6 @@ class TelegramBot:
         return wrapper
 
 
-# OTHER CLASSES
-
 class InlineKeyboardMarkup:
     def __init__(self, inline_keyboard=[], **kwargs):
         self.inline_keyboard = inline_keyboard
@@ -216,6 +214,44 @@ class InlineKeyboardButton:
         self.switch_inline_query_current_chat = switch_inline_query_current_chat
         self.callback_game = callback_game
         self.pay = pay
+
+    def get_dict(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}
+
+
+class ReplyKeyboardMarkup:
+    def __init__(self,
+                 keyboard=[],
+                 **kwargs):
+        self._keyboard = keyboard
+        self._kwargs = {**kwargs}
+
+    @property
+    def keyboard(self):
+        keyboard = []
+        for row in self._keyboard:
+            buttons = [button.get_dict() for button in row]
+            keyboard.append(buttons)
+        return keyboard
+
+    def to_json(self):
+        optional = {k: v for k, v in self._kwargs.items()}
+        return json.dumps({
+            'keyboard': self.keyboard,
+            **optional,
+        })
+
+
+class KeyboardButton:
+    def __init__(self,
+                 text,
+                 request_contact=None,
+                 request_location=None,
+                 request_poll=None):
+        self.text = text
+        self.request_contact = request_contact
+        self.request_location = request_location
+        self.request_poll = request_poll
 
     def get_dict(self):
         return {k: v for k, v in self.__dict__.items() if v is not None}
