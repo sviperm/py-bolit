@@ -14,7 +14,7 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['code', 'name', 'description', 'type', 'distribution', 'states']
+        fields = ['code', 'name', 'description', 'type', 'states']
 
 
 class NodeCodeRequestSerializer(serializers.Serializer):

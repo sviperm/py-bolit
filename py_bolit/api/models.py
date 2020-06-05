@@ -15,7 +15,7 @@ class State(models.Model):
     distribution = models.FloatField(default=0.5)
 
     def __str__(self):
-        return f"{self.node.code} -- {self.value}"
+        return self.value
 
 
 class Node(models.Model):
