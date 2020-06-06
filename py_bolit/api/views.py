@@ -23,8 +23,9 @@ class NodeListViewSet(viewsets.ViewSet):
         node_type = data.get('type')
         queryset = cls.queryset
         if type(node_type) is str:
-            queryset = queryset.filter(type__name=node_type)
+            queryset = queryset.filter(type__name__iexact=node_type)
         elif type(node_type) is list:
+            node_type = [nt.lower().strip() for nt in node_type]
             queryset = queryset.filter(type__name__in=node_type)
 
         if queryset:
@@ -35,7 +36,10 @@ class NodeListViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request, *args, **kwargs):
-        data = {key: ''.join(value) for key, value in request.query_params.items()}
+        data = {
+            key: ''.join(value)
+            for key, value in request.query_params.items()
+        }
         return self.get_response(data)
 
     def create(self, request, *args, **kwargs):
@@ -57,9 +61,10 @@ class NodeViewSet(viewsets.ViewSet):
             # TODO explain error
             return Response(status=status.HTTP_404_NOT_FOUND)
         elif is_code:
-            filter = {"code": data['code']}
+            filter = {"code__iexact": data['code']}
         elif is_name:
-            filter = {"name": data['name']}
+            filter = {"name__iexact": data['name']}
+            print(filter)
 
         queryset = cls.queryset.filter(**filter).first()
         if queryset:
@@ -69,11 +74,15 @@ class NodeViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request, *args, **kwargs):
-        data = {key: ''.join(value) for key, value in request.query_params.items()}
+        data = {
+            key: ''.join(value)
+            for key, value in request.query_params.items()
+        }
         return self.get_response(data)
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        print(data)
         return self.get_response(data)
 
 

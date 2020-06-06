@@ -14,6 +14,7 @@ def generate_CPT(event, dependencies):
 
     for dep in deps:
         if len(set(d['p_state'] for d in dep)) < 2:
+            # TODO: append by values by custom values
             for state, value in event.items():
                 dep.append({
                     'p_state': 'нет',

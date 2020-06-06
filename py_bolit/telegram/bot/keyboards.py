@@ -12,7 +12,6 @@ def get_node_keyboard(node):
 
 def get_reply_keyboard(names):
     buttons = [
-        ['/result']
         [KeyboardButton(name)] for name in names
     ]
     return ReplyKeyboardMarkup(buttons).to_json()
