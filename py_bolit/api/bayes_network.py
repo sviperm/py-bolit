@@ -2,29 +2,41 @@ from copy import deepcopy
 from itertools import product
 
 import numpy as np
+from django.db.models import Q
 from pomegranate import (BayesianNetwork, ConditionalProbabilityTable,
                          DiscreteDistribution, State)
+
+from .models import Node, Probability
 
 
 def generate_CPT(event, dependencies):
     deps = deepcopy(dependencies)
 
     for dep in deps:
-        if len(dep) < 2:
-            dep['нет'] = [pr for st, pr in event.items()]
+        if len(set(d['p_state'] for d in dep)) < 2:
+            for state, value in event.items():
+                dep.append({
+                    'p_state': 'нет',
+                    'c_state': state,
+                    'value': value,
+                })
 
     e_states = list(event.keys())
-    d_states = [list(dep.keys()) for dep in deps]
 
-    table = list(list(i) for i in product(*d_states, e_states))
+    d_states = []
+    for dep in deps:
+        d_states.append(list(set(d['p_state'] for d in dep)))
+
+    table = [list(i) for i in product(*d_states, e_states)]
 
     for row in table:
         e_state = row[-1]
-        s_i = e_states.index(e_state)
         formula = []
 
         for i, state in enumerate(row[:-1]):
-            formula.append(deps[i][state][s_i])
+            f = [d['value'] for d in deps[i]
+                 if (d['p_state'] == state) and (d['c_state'] == e_state)][0]
+            formula.append(f)
 
         formula = 1 - np.prod(1 - np.array(formula))
         row.append(formula)
@@ -38,154 +50,70 @@ def generate_CPT(event, dependencies):
     return table
 
 
-e_smoking = {
-    "да": 0.5,
-    "нет": 0.5,
-}
-
-e_ater = {
-    "да": 0.1,
-    "нет": 0.9,
-}
-
-e_imt = {
-    "да": 0.3,
-    "нет": 0.7,
-}
-
-e_age_mt_40 = {
-    "да": 0.5,
-    "нет": 0.5,
-}
-
-e_stress = {
-    "да": 0.2,
-    "нет": 0.8,
-}
-
-e_prev_ha = {
-    "да": 0.01,
-    "нет": 0.99,
-}
-
-e_ha = {
-    "да": 0.01,
-    "нет": 0.99,
-}
-
-e_sten = {
-    "да": 0.01,
-    "нет": 0.99,
-}
-
-e_nevralgia = {
-    "да": 0.05,
-    "нет": 0.95,
-}
-
-e_chest_pain = {
-    "да": 0.01,
-    "нет": 0.99,
-}
-
-e_pain_mt_15min = {
-    "да": 0.01,
-    "нет": 0.99,
-}
-
-e_dyspnea = {
-    "да": 0.01,
-    "нет": 0.99,
-}
-
-d_smoke_ater = {"да": [0.9, 0.1]}
-d_imt_ater = {"да": [0.8, 0.2]}
-d_age_mt_40_ater = {"да": [0.7, 0.3]}
-
-d_prev_ha_ha = {"да": [0.5, 0.5]}
-d_stress_ha = {"да": [0.8, 0.2]}
-d_ater_ha = {"да": [0.99, 0.01]}
-d_age_mt_40_ha = {"да": [0.85, 0.15]}
-
-d_stress_sten = {"да": [0.8, 0.2]}
-d_ater_sten = {"да": [0.99, 0.01]}
-d_age_mt_40_sten = {"да": [0.65, 0.35]}
-
-d_imt_nevralgia = {"да": [0.05, 0.95], "нет": [0.9, 0.1]}
-d_age_mt_40_nevralgia = {"да": [0.1, 0.9], "нет": [0.9, 0.1]}
-
-d_nevralgia_chest_pain = {"да": [0.99, 0.01]}
-d_sten_chest_pain = {"да": [0.99, 0.01]}
-d_ha_chest_pain = {"да": [0.99, 0.01]}
-
-d_nevralgia_pain_mt_15min = {"да": [0.01, 0.99]}
-d_sten_pain_mt_15min = {"да": [0.01, 0.99]}
-d_ha_pain_mt_15min = {"да": [0.99, 0.01]}
-
-d_sten_dyspnea = {"да": [0.99, 0.01]}
-d_ha_dyspnea = {"да": [0.01, 0.99]}
+discrete_distr = Node.get_discrete_distribution()
+probabilities = Probability.get_all()
 
 # Курение
-smoking = DiscreteDistribution(e_smoking)
+smoking = DiscreteDistribution(discrete_distr['smoking'])
 
 # ИМТ (худой, полный)
-imt = DiscreteDistribution(e_imt)
+imt = DiscreteDistribution(discrete_distr['imt'])
 
 # Старше 40 лет
-age_mt_40 = DiscreteDistribution(e_age_mt_40)
+age_mt_40 = DiscreteDistribution(discrete_distr['age_mt_40'])
 
 # Атеросклероз
 ater = ConditionalProbabilityTable(
-    generate_CPT(e_ater,
-                 [d_smoke_ater, d_imt_ater, d_age_mt_40_ater]),
+    generate_CPT(discrete_distr['ater'],
+                 [probabilities['smoking__ater'], probabilities['imt__ater'], probabilities['age_mt_40__ater']]),
     [smoking, imt, age_mt_40]
 )
 
 # Стресс
-stress = DiscreteDistribution(e_stress)
+stress = DiscreteDistribution(discrete_distr['stress'])
 
 # Инфаркт в анамнезе
-prev_ha = DiscreteDistribution(e_prev_ha)
+prev_ha = DiscreteDistribution(discrete_distr['prev_ha'])
 
 # Инфаркт
 ha = ConditionalProbabilityTable(
-    generate_CPT(e_ha,
-                 [d_prev_ha_ha, d_stress_ha, d_ater_ha, d_age_mt_40_ha]),
+    generate_CPT(discrete_distr['ha'],
+                 [probabilities['prev_ha__ha'], probabilities['stress__ha'], probabilities['ater__ha'], probabilities['age_mt_40__ha']]),
     [prev_ha, stress, ater, age_mt_40]
 )
 
 # Стенокардия
 sten = ConditionalProbabilityTable(
-    generate_CPT(e_sten,
-                 [d_stress_sten, d_ater_sten, d_age_mt_40_sten]),
+    generate_CPT(discrete_distr['sten'],
+                 [probabilities['stress__sten'], probabilities['ater__sten'], probabilities['age_mt_40__sten']]),
     [stress, ater, age_mt_40]
 )
 
 # Межреберная невралгия
 nevralgia = ConditionalProbabilityTable(
-    generate_CPT(e_nevralgia,
-                 [d_imt_nevralgia, d_age_mt_40_nevralgia]),
+    generate_CPT(discrete_distr['nevralgia'],
+                 [probabilities['imt__nevralgia'], probabilities['age_mt_40__nevralgia']]),
     [imt, age_mt_40]
 )
 
 # Загрудинные боли
 chest_pain = ConditionalProbabilityTable(
-    generate_CPT(e_chest_pain,
-                 [d_imt_nevralgia, d_sten_chest_pain, d_ha_chest_pain]),
+    generate_CPT(discrete_distr['chest_pain'],
+                 [probabilities['nevralgia__chest_pain'], probabilities['sten__chest_pain'], probabilities['ha__chest_pain']]),
     [nevralgia, sten, ha]
 )
 
 # Боли > 15 мин
 pain_mt_15min = ConditionalProbabilityTable(
-    generate_CPT(e_pain_mt_15min,
-                 [d_nevralgia_pain_mt_15min, d_sten_pain_mt_15min, d_ha_pain_mt_15min]),
+    generate_CPT(discrete_distr['pain_mt_15min'],
+                 [probabilities['nevralgia__pain_mt_15min'], probabilities['sten__pain_mt_15min'], probabilities['ha__pain_mt_15min']]),
     [nevralgia, sten, ha]
 )
 
 # Одышка
 dyspnea = ConditionalProbabilityTable(
-    generate_CPT(e_dyspnea,
-                 [d_sten_dyspnea, d_ha_dyspnea]),
+    generate_CPT(discrete_distr['dyspnea'],
+                 [probabilities['sten__dyspnea'], probabilities['ha__dyspnea']]),
     [sten, ha]
 )
 
@@ -205,8 +133,6 @@ n_dyspnea = State(dyspnea, name='dyspnea')
 
 class BayesNetwork:
     def __init__(self):
-        # TODO upload and download destribution from databse
-
         model = BayesianNetwork('Этиологически-ориентированная СППВР')
         model.add_states(n_smoking, n_imt, n_age_mt_40, n_ater, n_stress,
                          n_prev_ha, n_ha, n_sten, n_nevralgia, n_chest_pain,
@@ -248,15 +174,18 @@ class BayesNetwork:
     def predict(self, X):
         prediction = self.model.predict_proba(X)
         result = []
+        keys = [key.lower() for key in X]
+        nodes = Node.objects.filter(~Q(code__in=keys)).values('code', 'name', 'type__name')
         for i, state in enumerate(self.model.states):
             code = state.name.lower()
-            if code in [key.lower() for key in X]:
+            if code in keys:
                 continue
             pred = prediction[i].parameters[0]
+            node = [n for n in nodes if code == n['code']][0]
             result.append({
                 'code': code,
-                'name': 'TODO',
-                'type': 'TODO',
+                'name': node['name'],
+                'type': node['type__name'],
                 'states': pred,
             })
         return result

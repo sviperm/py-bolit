@@ -12,8 +12,8 @@ from .bot.keyboards import get_node_keyboard, get_reply_keyboard
 from .models import Chat, Node
 
 bot = TelegramBot(BOT_TOKEN)
-# bot.delete_webhook()
-# bot.init_webhook(BOT_WEBHOOK)
+bot.delete_webhook()
+bot.init_webhook(BOT_WEBHOOK)
 
 MDSS_API = "http://0.0.0.0:8000/api"
 DEFAULT_RESPONSE = JsonResponse({"ok": "POST request processed"})
@@ -50,7 +50,8 @@ class BotView(View):
                 data = {key: state for key, state in nodes}
                 resp = requests.post(f"{MDSS_API}/predict/", data=data)
                 if resp:
-                    text = str(json.loads(resp.content))
+                    pred = json.loads(resp.content)
+                    text = templates.prediction_to_text(pred)
                 else:
                     text = templates.something_wrong
                 # TODO: Ask more

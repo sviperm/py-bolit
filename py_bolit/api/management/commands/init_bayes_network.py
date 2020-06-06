@@ -18,7 +18,7 @@ class Command(BaseCommand):
             State.objects.all().delete()
             Node.objects.all().delete()
             NodeType.objects.all().delete()
-            print('Database deleted')
+            print('Database cleared')
 
         types = ['diagnosis', 'symptom']
         NodeType.objects.bulk_create([

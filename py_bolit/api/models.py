@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 
 
 class NodeType(models.Model):
@@ -28,6 +29,16 @@ class Node(models.Model):
     def __str__(self):
         return self.code
 
+    @classmethod
+    def get_discrete_distribution(cls):
+        nodes = cls.objects.all().values_list('code', 'states__value', 'states__distribution')
+        result = {}
+        for code, state, value in nodes:
+            if not result.get(code):
+                result[code] = {}
+            result[code][state] = value
+        return result
+
 
 class Probability(models.Model):
     # TODO parent and child nodes mustn't be equals
@@ -40,3 +51,23 @@ class Probability(models.Model):
         return (f"{self.parent_state.node.name}: {self.parent_state.value} -> "
                 f"{self.child_state.node.name}: {self.child_state.value} = "
                 f"{self.value}")
+
+    @classmethod
+    def get_all(cls):
+        probs = cls.objects.all().values('value',
+                                         parent=F('parent_state__node__code'),
+                                         child=F('child_state__node__code'),
+                                         p_state=F('parent_state__value'),
+                                         c_state=F('child_state__value'))
+        result = {}
+        for prob in probs:
+            code = f"{prob['parent']}__{prob['child']}"
+            if not result.get(code):
+                result[code] = []
+            result[code].append({
+                "p_state": prob["p_state"],
+                "c_state": prob["c_state"],
+                "value": prob["value"],
+            })
+
+        return result
